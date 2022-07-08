@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import "./LoginScreen.css";
+
+import ReCAPTCHA from "react-google-recaptcha";
 
 const LoginScreen = ({ history }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const reRef = useRef();
 
   useEffect(() => {
     if (localStorage.getItem("authToken")) {
@@ -17,6 +20,9 @@ const LoginScreen = ({ history }) => {
   const loginHandler = async (e) => {
     e.preventDefault();
 
+    const token = await reRef.current.executeAsync();
+    reRef.current.reset();
+
     const config = {
       header: {
         "Content-Type": "application/json",
@@ -26,7 +32,7 @@ const LoginScreen = ({ history }) => {
     try {
       const { data } = await axios.post(
         "/api/auth/login",
-        { email, password },
+        { email, password, token, },
         config
       );
 
@@ -61,9 +67,9 @@ const LoginScreen = ({ history }) => {
         <div className="form-group">
           <label htmlFor="password">
             Password:{" "}
-            <Link to="/forgotpassword" className="login-screen__forgotpassword">
+            {/* <Link to="/forgotpassword" className="login-screen__forgotpassword">
               Forgot Password?
-            </Link>
+            </Link> */}
           </label>
           <input
             type="password"
@@ -76,6 +82,11 @@ const LoginScreen = ({ history }) => {
             tabIndex={2}
           />
         </div>
+        <ReCAPTCHA
+          ref={reRef}
+          sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+          size="invisible"
+        />
         <button type="submit" className="btn btn-primary">
           Login
         </button>
