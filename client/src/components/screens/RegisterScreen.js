@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import "./RegisterScreen.css";
+
+import ReCAPTCHA from "react-google-recaptcha";
 
 const RegisterScreen = ({ history }) => {
   const [username, setUsername] = useState("");
@@ -9,9 +11,13 @@ const RegisterScreen = ({ history }) => {
   const [password, setPassword] = useState("");
   const [confirmpassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const reRef = useRef();
 
   const registerHandler = async (e) => {
     e.preventDefault();
+
+    const token = await reRef.current.executeAsync();
+    reRef.current.reset();
 
     const config = {
       header: {
@@ -35,6 +41,7 @@ const RegisterScreen = ({ history }) => {
           username,
           email,
           password,
+          token,
         },
         config
       );
@@ -101,6 +108,13 @@ const RegisterScreen = ({ history }) => {
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
         </div>
+
+        <ReCAPTCHA
+          ref={reRef}
+          sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+          size="invisible"
+        />
+
         <button type="submit" className="btn btn-primary">
           Register
         </button>
